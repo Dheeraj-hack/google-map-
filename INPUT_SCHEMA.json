@@ -7,20 +7,23 @@
       "title": "Location",
       "type": "string",
       "description": "City or region to search in (e.g., 'New York')",
-      "default": "New York"
+      "default": "New York",
+      "editor": "textfield"
     },
     "keyword": {
       "title": "Keyword",
       "type": "string",
       "description": "Type of place (e.g., 'restaurant', 'pharmacy')",
-      "default": "restaurant"
+      "default": "restaurant",
+      "editor": "textfield"
     },
     "maxResults": {
       "title": "Max Results",
       "type": "integer",
       "description": "Maximum number of places to scrape (max 200)",
       "default": 50,
-      "maximum": 200
+      "maximum": 200,
+      "editor": "number"
     }
   },
   "required": ["location", "keyword", "maxResults"]
