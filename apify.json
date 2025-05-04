@@ -1,0 +1,8 @@
+{
+  "name": "google-maps-scraper",
+  "version": "0.1",
+  "buildTag": "latest",
+  "env": {
+    "NODE_ENV": "production"
+  }
+}
