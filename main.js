@@ -2,28 +2,32 @@ const { Actor } = require('apify');
 
 Actor.main(async () => {
     const input = await Actor.getInput();
-    const { searchTerm = 'restaurants in New York', maxResults = 10 } = input;
+    const { location = 'New York', keyword = 'restaurant', maxResults = 50 } = input;
 
+    if (maxResults > 200) throw new Error('maxResults cannot be more than 200');
+
+    const searchTerm = `${keyword} in ${location}`;
     const browser = await Actor.launchPuppeteer();
     const page = await browser.newPage();
     const searchUrl = `https://www.google.com/maps/search/${encodeURIComponent(searchTerm)}`;
 
-    console.log(`Navigating to ${searchUrl}`);
+    console.log(`Searching: ${searchTerm}`);
     await page.goto(searchUrl, { waitUntil: 'networkidle2' });
-
-    await page.waitForSelector('.hfpxzc', { timeout: 30000 }); // result container
+    await page.waitForSelector('.hfpxzc', { timeout: 30000 });
 
     // Scroll to load more
-    let previousHeight;
-    let resultsLoaded = 0;
+    let previousHeight = 0;
+    let retries = 0;
+    while (true) {
+        const currentCount = await page.$$eval('.hfpxzc', els => els.length);
+        if (currentCount >= maxResults || retries > 10) break;
 
-    while (resultsLoaded < maxResults) {
-        resultsLoaded = await page.$$eval('.hfpxzc', els => els.length);
-        previousHeight = await page.evaluate('document.querySelector("body").scrollHeight');
+        previousHeight = await page.evaluate('document.body.scrollHeight');
         await page.evaluate('window.scrollTo(0, document.body.scrollHeight)');
-        await page.waitForTimeout(2000); // wait for more results to load
-        const newHeight = await page.evaluate('document.querySelector("body").scrollHeight');
-        if (newHeight === previousHeight) break;
+        await page.waitForTimeout(2000);
+
+        const newHeight = await page.evaluate('document.body.scrollHeight');
+        if (newHeight === previousHeight) retries++;
     }
 
     const detailLinks = await page.$$eval('.hfpxzc a', anchors =>
@@ -36,8 +40,7 @@ Actor.main(async () => {
         const link = detailLinks[i];
         const detailPage = await browser.newPage();
         await detailPage.goto(link, { waitUntil: 'networkidle2' });
-
-        await detailPage.waitForTimeout(3000); // allow details to load
+        await detailPage.waitForTimeout(3000);
 
         const data = await detailPage.evaluate(() => {
             const name = document.querySelector('h1 span')?.textContent || null;
@@ -49,8 +52,8 @@ Actor.main(async () => {
             return { name, address, phone, website, rating };
         });
 
-        results.push(data);
         console.log(`Scraped: ${data.name}`);
+        results.push(data);
         await detailPage.close();
     }
 
