@@ -1,0 +1,27 @@
+{
+  "title": "Google Maps Scraper Input",
+  "type": "object",
+  "schemaVersion": 1,
+  "properties": {
+    "location": {
+      "title": "Location",
+      "type": "string",
+      "description": "City or region to search in (e.g., 'New York')",
+      "default": "New York"
+    },
+    "keyword": {
+      "title": "Keyword",
+      "type": "string",
+      "description": "Type of place (e.g., 'restaurant', 'pharmacy')",
+      "default": "restaurant"
+    },
+    "maxResults": {
+      "title": "Max Results",
+      "type": "integer",
+      "description": "Maximum number of places to scrape (max 200)",
+      "default": 50,
+      "maximum": 200
+    }
+  },
+  "required": ["location", "keyword", "maxResults"]
+}
